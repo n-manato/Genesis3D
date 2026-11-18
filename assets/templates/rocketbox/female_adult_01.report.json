@@ -1,0 +1,96 @@
+{
+  "bones": {
+    "renamed": 54,
+    "face_kept": 26,
+    "unmatched": []
+  },
+  "morphs": {
+    "arkit": 52,
+    "viseme": 15,
+    "kept": 108
+  },
+  "materials": {
+    "f001_body": "body",
+    "f001_head": "head",
+    "f001_opacity": "opacity"
+  },
+  "metallic_zeroed": [
+    "body",
+    "head",
+    "opacity"
+  ],
+  "source": "/tmp/claude-1008/-home-ai-ccore-Documents-DEV-Genesis3D/217455a9-4155-42f8-822d-a09d1ee447e4/scratchpad/rb/Female_Adult_01/Export/Female_Adult_01_facial.fbx",
+  "out": "assets/templates/rocketbox/female_adult_01.glb",
+  "images": 7,
+  "image_format": "WEBP",
+  "vertices": 5563,
+  "size_mb": 7.2,
+  "textures": {
+    "searched": [
+      "/tmp/claude-1008/-home-ai-ccore-Documents-DEV-Genesis3D/217455a9-4155-42f8-822d-a09d1ee447e4/scratchpad/rb/Female_Adult_01/Textures",
+      "/tmp/claude-1008/-home-ai-ccore-Documents-DEV-Genesis3D/217455a9-4155-42f8-822d-a09d1ee447e4/scratchpad/rb/Female_Adult_01/Export/Textures",
+      "/tmp/claude-1008/-home-ai-ccore-Documents-DEV-Genesis3D/217455a9-4155-42f8-822d-a09d1ee447e4/scratchpad/rb/Female_Adult_01/Export"
+    ],
+    "relinked": [
+      {
+        "name": "f001_body_specular.tga",
+        "size": [
+          2048,
+          2048
+        ]
+      },
+      {
+        "name": "f001_head_specular.tga",
+        "size": [
+          2048,
+          2048
+        ]
+      },
+      {
+        "name": "f001_opacity_color.tga",
+        "size": [
+          2048,
+          2048
+        ]
+      },
+      {
+        "name": "f001_opacity_color.tga",
+        "size": [
+          2048,
+          2048
+        ]
+      },
+      {
+        "name": "f001_body_color.tga",
+        "size": [
+          2048,
+          2048
+        ]
+      },
+      {
+        "name": "f001_body_normal.tga",
+        "size": [
+          2048,
+          2048
+        ]
+      },
+      {
+        "name": "f001_head_normal.tga",
+        "size": [
+          2048,
+          2048
+        ]
+      },
+      {
+        "name": "f001_head_color.tga",
+        "size": [
+          2048,
+          2048
+        ]
+      }
+    ],
+    "missing": [],
+    "exported": true,
+    "size_mb": 7.2
+  }
+}

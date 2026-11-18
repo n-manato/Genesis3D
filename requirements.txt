@@ -1,0 +1,15 @@
+# Genesis3D orchestrator — 意図的に torch を含まない。
+# 重い推論は各モデル専用 env の独立サブプロセス、または :8811 の TRELLIS.2 が担う。
+fastapi>=0.115
+uvicorn[standard]>=0.32
+python-multipart>=0.0.17
+pydantic>=2.9
+httpx>=0.27
+websockets>=13.0
+PyYAML>=6.0
+nvidia-ml-py>=12.560
+Pillow>=10.4
+numpy>=1.26,<2.2
+trimesh>=4.5
+# MCP サーバー（scripts/mcp.sh から genesis_mcp.server を起動）
+mcp>=1.28

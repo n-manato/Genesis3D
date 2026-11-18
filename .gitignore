@@ -1,0 +1,21 @@
+# third-party checkouts and weights (fetched by envs/setup_*.sh)
+vendor/
+assets/templates/*.vrm
+
+# secrets and local config
+.env
+
+# generated outputs
+jobs/
+logs/
+__pycache__/
+*.pyc
+
+# photos of a real person and the avatars derived from them (not redistributable)
+subject_a/
+# verification sheets that contain the same real-person photos
+assets/templates/rocketbox/*.png
+!assets/templates/rocketbox/landmarks68.png
+!assets/templates/rocketbox/preview.png
+# third-party illustrations used as benchmark inputs
+benchmarks/inputs/**/*.png

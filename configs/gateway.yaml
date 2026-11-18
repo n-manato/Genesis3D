@@ -1,0 +1,22 @@
+# AICCORE-Nexus Gateway 連携。Gateway が無くても Genesis3D 単体で動作する。
+gateway:
+  enabled: true
+  # 未設定なら callback を送らない（単体動作）
+  host_env: GATEWAY_HOST
+  port_env: GATEWAY_PORT
+  api_key_env: GATEWAY_API_KEY
+  event_path_env: GATEWAY_EVENT_PATH
+  timeout_sec: 5
+  # callback 失敗はログに残すだけでジョブは止めない
+  fail_open: true
+
+events:
+  - job.created
+  - job.preprocessing
+  - job.generating
+  - candidate.completed
+  - job.evaluating
+  - job.rigging
+  - job.exporting
+  - job.completed
+  - job.failed

@@ -1,0 +1,156 @@
+# テンプレート素体の登録。`game_avatar` スタイルが参照する。
+#
+# 素体は「一度だけ手で仕上げて、以降どの写真でも使い回すもの」なので、
+# ここに書くのは実測値であって希望値ではない。追加する前に必ず通すこと:
+#
+#     python3 scripts/check_kehai_model.py <candidate.glb>     # .glb の場合
+#     python3 scripts/check_template_vrm.py <candidate.vrm>    # .vrm の場合
+#
+# `.env` の RIG_TEMPLATE_VRM（単数）は既存2スタイル用にそのまま残す。
+# あちらは骨だけを借りる用途で、こちらはメッシュごと使う。
+
+default: rocketbox_male_01
+
+templates:
+
+  # ------------------------------------------------------------------ 実写寄り
+  #
+  # Microsoft Rocketbox（MIT・115体）。NBA 2K / 逆水寒 系を狙う本線。
+  # 素の FBX は 3ds Max の絶対パスを持っていてテクスチャが解決できないので、
+  # `scripts/prepare_rocketbox.py` を通したものを使う（骨とモーフの改名も同時に行う）。
+  #
+  #   python3 scripts/prepare_rocketbox.py \
+  #       --fbx <Rocketbox>/Assets/Avatars/Adults/Male_Adult_01/Export/Male_Adult_01_facial.fbx \
+  #       --out assets/templates/rocketbox/male_adult_01.glb
+
+  rocketbox_male_01:
+    display_name: "Rocketbox 成人男性 01（実写寄り）"
+    gender: male
+    mesh: "assets/templates/rocketbox/male_adult_01.glb"
+    source_fbx: "Assets/Avatars/Adults/Male_Adult_01/Export/Male_Adult_01_facial.fbx"
+
+    # 2026-09-02 実測。check_kehai_model.py 合格（骨・まばたき・口パク）。
+    measured:
+      vertices: 4803
+      height_m: 1.824
+      arm_span_m: 1.348
+      primitives: {body: 2597, head: 1662, opacity: 544}
+      skin_joints: 80          # うち指30本、顔ボーン26本
+      morphs: 175              # ARKit 52 + Oculus ビセーム 15 + FACS AU 108
+      images: 7                # WebP。元は 2048² の TGA
+      size_mb: 6.1
+
+    license:
+      name: "Microsoft Rocketbox"
+      spdx: MIT
+      url: "https://github.com/microsoft/Microsoft-Rocketbox"
+      # MIT なので改変・再配布・商用・サブライセンスすべて無条件。
+      # VRoid のサンプルより緩い。
+
+    # 写真を投影する対象。**マテリアル名で指定する。**
+    # `blender/project_face.py --face-material` と
+    # `blender/ortho_front.py --frame-material` に渡す。スロット0の決め打ちだと
+    # Rocketbox では body、VRoid では FaceMouth に貼られる（docs/08 §10.4c）。
+    face_material: head
+    body_material: body
+
+    deform:
+      meshes: []               # 空 = 全メッシュ（Rocketbox は単一メッシュ）
+      exaggeration: 1.0
+      # アンカーは任意ではない。無いと鼻を12mm動かしたとき足が1.2mm動く
+      # （200点打つと0.045mmまで落ちる。docs/08 §10.3）
+      anchor_below_y: 1.30
+      anchor_count: 200
+
+    # 2026-09-02 作成。68点すべて顔面に着地、頂点への吸着 平均3.2mm / 最大9.3mm。
+    # 目視確認済み（assets/templates/rocketbox/landmarks68.png）。
+    landmarks68: "configs/landmarks/rocketbox_male_01.json"
+    # ゼロ変位アンカー200点。**任意項目ではない。** 実測（docs/08 §10.3）:
+    # 鼻先を12mm出したとき、40cm以上離れた頂点が 13.113mm → 0.134mm（98分の1）。
+    anchors: "configs/landmarks/rocketbox_male_01_anchors.json"
+
+  rocketbox_female_01:
+    display_name: "Rocketbox 成人女性 01（実写寄り）"
+    gender: female
+    mesh: "assets/templates/rocketbox/female_adult_01.glb"
+    source_fbx: "Assets/Avatars/Adults/Female_Adult_01/Export/Female_Adult_01_facial.fbx"
+
+    measured:
+      vertices: 5563
+      height_m: 1.743
+      arm_span_m: 1.217
+      primitives: {body: 2962, head: 1921, opacity: 680}
+      skin_joints: 80
+      morphs: 175
+      images: 7
+      size_mb: 7.2
+
+    license:
+      name: "Microsoft Rocketbox"
+      spdx: MIT
+      url: "https://github.com/microsoft/Microsoft-Rocketbox"
+
+    face_material: head
+    body_material: body
+
+    deform:
+      meshes: []
+      exaggeration: 1.0
+      anchor_below_y: 1.25     # 女性は身長 1.743m なので男性より低い位置で切る
+      anchor_count: 200
+
+    # 68点すべて着地、吸着 平均2.9mm / 最大7.7mm。目視確認済み。
+    landmarks68: "configs/landmarks/rocketbox_female_01.json"
+    anchors: "configs/landmarks/rocketbox_female_01_anchors.json"
+
+  # -------------------------------------------------------------------- アニメ調
+  #
+  # 方針は実写寄りに決めたが、方式は見た目に依存しないので残しておく。
+  # テンプレートを差し替えるだけでアニメ調も出せる。
+
+  vroid_female:
+    display_name: "VRoid 女性素体（アニメ調）"
+    gender: female
+    mesh: "/home/ai-ccore/Documents/DEV/KEHAI/Live2D Characters/vrm/sample.vrm"
+
+    measured:
+      vertices: 24951
+      meshes: {Face: 4106, Body: 7977, Hair: 12868}
+      primitives: {Face: 7, Body: 5, Hair: 1}
+      human_bones: 54          # 指30本を含む
+      morphs: 57               # VRoid Fcl_* 命名
+      expression_presets_bound: 14
+      spring_bones: 22
+      colliders: 13
+      mtoon_materials: 13
+      node_constraints: 14
+
+    license:
+      name: "VRM1_Constraint_Twist_Sample"
+      authors: ["pixiv Inc."]
+      modification: allowModificationRedistribution
+      allow_redistribution: true
+      url: "https://vrm.dev/licenses/1.0/"
+
+    # KEHAI は VRM の expression を読まず、生のモーフ名だけを見る
+    # （vrm-expression.ts:343 / :558、docs/08 §10.4）。VRoid の Fcl_* 命名は
+    # PMX でも ARKit でもないので、そのままでは何も動かない。
+    # 別名は glTF の accessor 使い回しで張れるので **0バイト**で足りる。
+    #
+    # Rocketbox 側にこの項目が無いのは、最初から ARKit 命名に改名済みだから。
+    arkit_aliases:
+      eyeBlinkLeft:  "Face_Blendshape.Fcl_EYE_Close_L"
+      eyeBlinkRight: "Face_Blendshape.Fcl_EYE_Close_R"
+      jawOpen:       "Face_Blendshape.Fcl_MTH_A"
+
+    face_material: Face_00_SKIN
+    body_material: Body_00_SKIN
+
+    deform:
+      meshes: [Face, Body, Hair]
+      exaggeration: 1.0
+      anchor_below_y: 1.30
+      anchor_count: 200
+
+    landmarks68: null
+    anchors: null

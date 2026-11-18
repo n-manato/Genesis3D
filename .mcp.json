@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "genesis3d": {
+      "command": "/home/ai-ccore/Documents/DEV/Genesis3D/scripts/mcp.sh",
+      "args": [],
+      "env": {}
+    }
+  }
+}

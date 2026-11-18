@@ -1,0 +1,126 @@
+# スタイル定義と評価重み。Overall Score の算出に使う。
+#
+# Generation Time の重みは意図的に極小(0.02)。30分かけても減点は最大0.2点にしかならず、
+# 品質差1点は常に時間差30分を上回る。「速度は最優先ではない」を式に直接埋め込んでいる。
+
+styles:
+  # ラップ方式（docs/09）。**既存の10工程には載らない。**
+  # 候補を複数作って評価で選ぶ構造ではなく、テンプレート1体を非剛体ICPで
+  # 変形する決定的な手順なので、pipeline.py が専用の分岐で
+  # scripts/gen_wrap_avatar.py を独立サブプロセスとして回す。
+  # 重みは評価器を通らないので使われないが、キーの形を揃えておく。
+  wrap:
+    display_name: "ラップ方式（実写寄り・テンプレのトポロジを出荷）"
+    canonicalize_apose: false
+    preferred_models: [trellis2]
+    weights:
+      identity: 0.40
+      face:     0.25
+      body:     0.10
+      hair:     0.05
+      clothes:  0.05
+      texture:  0.10
+      topology: 0.03
+      back:     0.02
+
+  stylized:
+    display_name: "3Dアニメ映画的デフォルメ"
+    # 工程2でA-pose正規化を行う（VRM Humanoid割当の成功率が上がる）
+    canonicalize_apose: true
+    preferred_models: [charactergen, trellis2]
+    weights:
+      identity: 0.15
+      face:     0.25
+      body:     0.10
+      hair:     0.10
+      clothes:  0.10
+      texture:  0.15
+      topology: 0.05
+      back:     0.05
+      rigging:  0.05
+
+  realistic_jrpg:
+    display_name: "高精細リアル寄りJRPG"
+    # リアル系は元ポーズの人体比率を保持する方が identity が保たれる
+    canonicalize_apose: false
+    preferred_models: [pshuman, trellis2]
+    weights:
+      identity: 0.25
+      face:     0.20
+      body:     0.20
+      hair:     0.10
+      clothes:  0.10
+      texture:  0.10
+      topology: 0.05
+      back:     0.05
+      rigging:  0.05
+
+  # **非推奨。** 接合方式。ラップ方式（wrap）に全指標で劣る（docs/09 §4）。
+  # 比較の基準として残しているだけ。
+  game_avatar:
+    display_name: "ゲームアバター（固定トポロジのテンプレートを変形）"
+    # **このスタイルはジオメトリモデルを一切使わない。** 写真ごとにメッシュを
+    # 起こすのをやめ、configs/templates.yaml の素体を RBF で変形する（docs/08）。
+    # TRELLIS も CharacterGen も MICA も呼ばない。
+    pipeline: template_deform
+    template: rocketbox_female_01
+    canonicalize_apose: false
+    preferred_models: []
+    # 評価は走らないが、`evaluation/score.py:load_weights` が weights を
+    # 空辞書で受けると全項目0点になるので、9項目すべて書いておく。
+    # identity/face を重くしているのは、この方式で写真から移るのが顔だけだから。
+    weights:
+      identity: 0.30
+      face:     0.25
+      body:     0.05
+      hair:     0.10
+      clothes:  0.05
+      texture:  0.15
+      topology: 0.05
+      back:     0.00
+      rigging:  0.05
+
+# 加点ではなくゲート。VRMとして使えないものが高得点にならないようにする。
+gates:
+  hands:    4.0
+  geometry: 5.0
+  vrm:      7.0
+
+time_penalty:
+  weight: 0.02
+  # generation_time_sec / normalize_sec を 0..1 にクランプして10点換算
+  normalize_sec: 1800
+
+# 解像度は品質に最も強く効くレバー。実測では 512 で全身像を作ると
+# 胴体・肩・腰が分断され、連結成分が6000個超に断片化した。
+# ただし TRELLIS.2 は GLB 抽出時のピークVRAMが高く、trellis-service の
+# README は 24GB カードでは 512 を推奨している。1024 は OOM しうるため、
+# maximum では 1024 を先に試し、失敗したら 512 の候補で継続する
+# （1候補の失敗でジョブ全体は落とさない — 要件§30）。
+quality_presets:
+  fast:
+    candidates_per_model: 1
+    seeds: [0]
+    resolutions: [512]
+    multiview: false
+    evaluate: simple
+    retexture: false
+    mesh_repair: basic
+  high:
+    candidates_per_model: 2
+    seeds: [0, 1]
+    resolutions: [1024, 512]
+    multiview: true
+    evaluate: full
+    retexture: true
+    mesh_repair: full
+  maximum:
+    candidates_per_model: 4
+    seeds: [0, 1, 2, 3]
+    resolutions: [1024, 1024, 512, 512]
+    multiview: true
+    evaluate: full
+    retexture: true
+    mesh_repair: full
+    # BEST_GEOMETRY と BEST_TEXTURE の双方について再テクスチャを行う
+    retexture_both: true

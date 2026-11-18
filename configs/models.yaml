@@ -1,0 +1,101 @@
+# モデルレジストリ。adapters/ の実装と 1:1 で対応する。
+# required_vram_gb は「そのステージのピーク実測/公称値」。
+
+models:
+  trellis2:
+    adapter: trellis
+    display_name: "TRELLIS.2-4B"
+    purpose: [geometry, texturing]
+    styles: [stylized, realistic_jrpg]
+    # 既存の AICCORE-Nexus trellis-service を再利用する。Genesis3D は
+    # プロセスを起動せず、HTTP でのみ叩くため VRAM 消費は 0 として扱う。
+    kind: http_service
+    endpoint_env: TRELLIS_HOST
+    default_endpoint: "http://127.0.0.1:8811"
+    preferred_gpu: 1
+    required_vram_gb: 0.0      # 外部プロセスが確保済み
+    multi_gpu_supported: false
+    installed: true
+    resolutions: [512, 1024, 1536]
+    default_resolution: 512
+    license: MIT
+    notes: "既に:8811で稼働中。Trellis2TexturingPipeline による再テクスチャも同一サービス"
+    # trellis_runner.py の既定は decimation_target=1,000,000 / texture_size=2048。
+    # 実測でこの既定は GLB 抽出(o_voxel.postprocess.to_glb, remesh=True)が
+    # CPU で20分以上かかる。VRM アバターは通常 3万〜15万三角形なので 100万は過剰。
+    # 候補生成は軽く回し、採用された1体だけを最終工程で高精細に焼き直す。
+    # GLB 抽出が CPU バウンドで長いため、HTTP クライアント側の待ち時間を長く取る
+    request_timeout_sec: 2400
+    mesh_settings:
+      candidate:            # 工程3: 候補を数作るフェーズ
+        decimation_target: 120000
+        texture_size: 1024
+      final:                # 工程6: 採用候補の仕上げ
+        decimation_target: 200000
+        texture_size: 2048
+
+  charactergen:
+    adapter: charactergen
+    display_name: "CharacterGen"
+    purpose: [geometry, multiview]
+    styles: [stylized]
+    kind: subprocess
+    conda_env: charactergen
+    preferred_gpu: 0
+    required_vram_gb: 10.0
+    multi_gpu_supported: false
+    installed: false           # Phase 5 で導入
+    outputs_apose: true
+    license: "要確認"
+    notes: "A-pose正規化出力。VRM Humanoid割当の成功率を上げる"
+
+  pshuman:
+    adapter: pshuman
+    display_name: "PSHuman"
+    purpose: [geometry]
+    styles: [realistic_jrpg]
+    kind: subprocess
+    conda_env: pshuman
+    preferred_gpu: 0
+    required_vram_gb: 16.0
+    multi_gpu_supported: false
+    installed: false           # Tier 1
+    license: "要確認"
+    notes: "SiTH/SIFU/ECON を論文ベンチで上回る"
+
+  imagegen_sdxl:
+    adapter: none              # registry からは引かない。工程2が直接 conda run で叩く
+    display_name: "RealVisXL V5.0 + ControlNet-OpenPose SDXL"
+    purpose: [multiview]
+    styles: [realistic_jrpg]
+    kind: subprocess
+    conda_env: genesis-imagegen
+    preferred_gpu: 0
+    # 実測ピーク 13.9GB（offload なし）。GPU0 は他サービスが常時 9GB 使っており
+    # 合計 23.2GB/24GB まで上がったため、パイプラインからは --offload 前提で
+    # 8.0GB のリースで回す（docs/05-measurements.md §19）。
+    required_vram_gb: 8.0
+    multi_gpu_supported: false
+    installed: true
+    weights:
+      base: "SG161222/RealVisXL_V5.0"
+      controlnet: "xinsir/controlnet-openpose-sdxl-1.0"
+    license: "CreativeML Open RAIL++-M (SDXL 系) / 要確認"
+    notes: >
+      工程2の参照ビュー生成。全身Tポーズ画像を作る。生成された顔は本人ではない
+      （実測 ArcFace 0.20）ので、顔は head_merge が実写から作る。
+      envs/setup_imagegen.sh で導入。multiview/ が実装。
+
+  unirig:
+    adapter: unirig
+    display_name: "UniRig"
+    purpose: [rigging]
+    styles: [stylized, realistic_jrpg]
+    kind: subprocess
+    conda_env: unirig
+    preferred_gpu: 0
+    required_vram_gb: 8.0
+    multi_gpu_supported: false
+    installed: false           # Phase 4 で導入
+    license: "要確認"
+    notes: "glb/obj/fbx/vrm 入出力。VRoid学習でVRM骨格と相性が良い"

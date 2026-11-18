@@ -1,0 +1,36 @@
+# GPU 割当ポリシー。実測値に基づく（2026-08-20）。
+#
+# GPU0 = Genesis3D が使う。ただし**専有ではない**。他サービスが約9GB常駐し
+#        （actionplan_service :8893 / :8000 サイドカー）、空きは約15GB。
+# GPU1 = TRELLIS.2 用。2026-08-24 に startupPolicy を Always Running から
+#        **On Demand** に変えたため（docs/05-measurements.md §12）、重みは CPU RAM に
+#        置かれアイドル時の GPU1 は約23GB空く。「17GB常駐だから新規ロード禁止」という
+#        元の前提は消えている。それでも load_new_models: false のままにしてあるのは、
+#        ジョブ中は TRELLIS がステージ単位で GPU1 を掴むため、同時に別モデルを
+#        載せると取り合いになるから。載せるなら max_concurrent_gpu_stages で
+#        直列化されることを前提にすること。
+
+devices:
+  - index: 0
+    role: genesis_owned
+    # 他プロセスと共有するため、この値まで使い切らない
+    reserve_gb: 2.0
+    notes: "参照ビュー生成(SDXL) / 評価器 / Blender を時分割。実測ピークは
+            SDXL の 13.9GB（--offload 前提で 8GB リースで回している）"
+  - index: 1
+    role: external_service_only
+    reserve_gb: 2.0
+    load_new_models: false
+    notes: "TRELLIS.2 用。On Demand 化でアイドル時は約23GB空くが、ジョブ中は
+            ステージ単位で掴むため既定では新規ロードしない"
+
+policy:
+  # ステージ開始前に NVML で空きVRAMを確認し、required_vram_gb + reserve を
+  # 下回る場合は起動せず待機する。VRAM不足での OOM を未然に防ぐ。
+  preflight_vram_check: true
+  # 空き待ちのタイムアウト（秒）。超えたらそのステージは失敗扱いにし、
+  # ジョブ全体は残りの候補で続行する。
+  wait_timeout_sec: 900
+  poll_interval_sec: 5
+  # 同時に走らせるGPUステージ数。GPU0を時分割するので既定は1。
+  max_concurrent_gpu_stages: 1
